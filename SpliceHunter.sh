@@ -96,7 +96,7 @@ Rscript --vanilla $cf
 ## start running the program
 cd $dataDir
 
-echo -e "\n CrypticHunter program initiating ... \n "
+echo -e "\n SpliceHunter program initiating ... \n "
 for i in $(ls *.bed)
 do
     # extract filename
@@ -106,8 +106,6 @@ do
 
 	## perform bedtools
 	bedtools intersect -a $i -b $db -wo > X__${id}_mapped.bed
-
-    ################################ END ####################################
 done
 
 ## back to parent directory
@@ -128,7 +126,7 @@ echo -e "\n Shannon Diversity Calculations Begin... \n"
 python3.10 ./script/Shannon_Score_Calc.py
 
 ## stage 2
-echo -e " Stage 2 initiating ... \n "
+echo -e " Stage 2 initiating - Population Summary ... \n "
 Rscript --vanilla $stage2
 
 echo -e "\n Analysis ... completed"
