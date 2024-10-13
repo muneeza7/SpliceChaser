@@ -66,16 +66,14 @@ for i in range(len(bname)):
             raw_dat_1.loc[junc, "diff_H_start_end"] = abs(H_start - H_end)
 
         final = raw_dat_1.rename(
-            columns={0: "chr", 1: "start", 2: "stop", 3: "startAnno", 4: "stopAnno", 5: "intron_motif",
-                     6: "unique_count",
-                     7: "multimapped_count",
-                     8: "max_overhang", 9: "geneStrand", 10: "transcriptName", 11: "totalEx", 12: "geneName",
-                     13: "readStrand", 14: "prop_uniq_multi", 15: "first5", 16: "last5", 17: "first3", 18: "last3",
-                     19: "event5", 20: "event3", 21: "location5", 22: "location3", 23: "strandDirection", 24: "event",
-                     25: "nExSkip", 26: "exon", 27: "withinEx5", 28: "withinEx3", 29: "nGene", 30: "nTranscripts",
-                     31: "distance_from_last5", 32: "distance_from_first3", 33: "Gene", 34: "GTExFraction",
-                     35: "counts",
-                     36: "JunctionRatio", 37: "delEx", 38: "normalJunction", 39: "backSpliceInfo", 40: "sampleName"})
+            columns={0: "chr", 1: "start", 2: "stop", 3: "startAnno", 4: "stopAnno", 5: "intron_motif", 6: "unique_count",
+                     7: "multimapped_count", 8: "max_overhang", 9: "geneStrand", 10: "transcriptName", 11: "totalEx", 
+                     12: "geneName", 13: "readStrand", 14: "prop_uniq_multi", 15: "first5", 16: "last5", 
+                     17: "first3", 18: "last3", 19: "event5", 20: "event3", 21: "location5", 22: "location3", 
+                     23: "strandDirection", 24: "event", 25: "nExSkip", 26: "exon", 27: "withinEx5", 28: "withinEx3", 
+                     29: "nGene", 30: "nTranscripts", 31: "distance_from_last5", 32: "distance_from_first3", 
+                     33: "Gene", 34: "GTExFraction", 35: "counts", 36: "JunctionRatio", 37: "JRPM", 38:"t_len", 39: "JPKM", 40: "delEx", 
+                     41: "normalJunction", 42: "backSpliceInfo", 43: "sampleName"})
 
 
         final.to_csv(f"{output_dir}/{id1}_Shannon_score.csv", index=False)
