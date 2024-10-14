@@ -32,9 +32,7 @@ for i in range(len(bname)):
     else:
         for junc in range(len(raw_dat_1)):
             dat0 = dat[(dat[2] == raw_dat_1.iloc[junc, 1]) & (dat[3] == raw_dat_1.iloc[junc, 2]) & (dat[6] == "1")]
-
-            # Use .loc to avoid SettingWithCopyWarning
-            dat0 = dat0.copy()  # Ensure we're working on a copy
+            dat0 = dat0.copy() 
 
             dat0.loc[:, "n_count"] = dat0[5].str.count("N")
             dat0.loc[:, "first_m"] = dat0[5].str.extract(r"([0-9]+)M").astype(int)
