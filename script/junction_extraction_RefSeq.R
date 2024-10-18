@@ -92,8 +92,6 @@ load("./database/GTEx ref v7 junction database.RData")
 geneLen <- read.table("./database/RefSeq_ref_without_Intron_v1.bed")
 geneLen <- geneLen %>% dplyr::select(V5, V8) %>%
   dplyr::rename(t_len = V8) %>% unique()
-## load gene_count files
-gf <- list.files(path = "./GeneCounts/", pattern = "ReadCounts.tsv", full.names = T)
 
 ## gene of interest
 goi <- c( "ASXL1", "ATM", "BCOR", "BCORL1", "BTG1", "CALR",
@@ -123,22 +121,7 @@ for(k in 1:length(files)) {
     distinct(V1, V2, V3, .keep_all = T) %>%
     summarise(totalCounts=sum(V7))
   
-  ## Reading Star's output gene counts
-  gdat <- read.table(gf[k], sep = "\t", header = F, stringsAsFactors = F)
-  gdat <- gdat[-c(1:4),] %>% remove_rownames() %>%
-    dplyr::select(-V2, -V4)
-  
-  ## library size/total read counts
-  totalGdat <- gdat %>% summarise(totalGCounts=sum(V3))
-  
-  ## Calculating "per million" factor
-  pm <- as.numeric(totalGdat)/1000000
-  
-  # ## RPM Calc
-  gdat2 <- gdat %>% mutate(rpm=V3/as.numeric(pm)) %>%
-    dplyr::rename(Symbol=V1, Scounts=V3)
-  
-  
+  ## total junction read counts for individual genes
   geneDat2 <- dat %>%
     group_by(V18) %>%
     summarise(counts=sum(V7)) %>%
