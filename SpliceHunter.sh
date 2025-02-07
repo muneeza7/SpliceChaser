@@ -1,12 +1,12 @@
 #!/bin/bash
 
 ################################################################################################################
-## Filename: SpliceHunter.sh
+## Filename: SpliceChaser.sh
 ## Created: October 10, 2024
 ## Author(s): Muneeza Maqsood, Chung Kok
 ##
 ## Purpose: 
-##      - to execute SpliceHunter Pipeline with conversion format implemented
+##      - to execute SpliceChaser Pipeline with conversion format implemented
 ##          
 ## Instructions:  
 ##      - put all SJ.out.tab files in the input directory
@@ -96,7 +96,7 @@ Rscript --vanilla $cf
 ## start running the program
 cd $dataDir
 
-echo -e "\n SpliceHunter program initiating ... \n "
+echo -e "\n SpliceChaser program initiating ... \n "
 for i in $(ls *.bed)
 do
     # extract filename
