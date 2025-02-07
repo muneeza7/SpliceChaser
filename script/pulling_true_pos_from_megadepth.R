@@ -9,7 +9,7 @@
 ##      - to pull extra variants drectly from bams that are missed by STAR due to mapping parameters
 ##          
 ## Instructions:  
-##      - perform analysis on the SpliceHunter directory
+##      - perform analysis on the SpliceChaser directory
 ##      - put all input files (SJ.out.tab) into input folder 
 ##      - execute bash script 
 ##         
