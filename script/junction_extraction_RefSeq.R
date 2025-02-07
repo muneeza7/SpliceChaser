@@ -20,20 +20,8 @@ rm(list=ls())
 ## load library
 library(pacman)
 
-p_load("stringr","tidyverse", 
-       "Biostrings",
-       "BSgenome.Hsapiens.UCSC.hg19",
-       "dplyr", 
-       "stringr",
-       "annotate",
-       "org.Hs.eg.db",
-       "TxDb.Hsapiens.UCSC.hg19.knownGene",
-       "GenomicRanges",
-       "Homo.sapiens",
-       "GenomicFeatures",
-       "GenomicAlignments",
-       "SummarizedExperiment",
-       "MatrixGenerics")
+p_load("stringr","tidyverse", "openxlsx", "stringr", "annotate", "GenomicAlignments",
+       "BSgenome.Hsapiens.UCSC.hg19", "GenomicFeatures", "dplyr", "GenomicRanges")
 
 
 # Make the annotating function. It will annotate the intervals with gene_Ids
