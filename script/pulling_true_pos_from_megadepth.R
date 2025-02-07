@@ -20,26 +20,7 @@ rm(list=ls())
 ## load library
 library(pacman)
 
-p_load("tidyverse", 
-       # "Biostrings", 
-       # "BSgenome.Hsapiens.UCSC.hg19", 
-       "dplyr", 
-       "stringr")
-
-p_load("tidyverse", 
-       "Biostrings",
-       "BSgenome.Hsapiens.UCSC.hg19",
-       "dplyr", 
-       "stringr",
-       "annotate",
-       "org.Hs.eg.db",
-       "TxDb.Hsapiens.UCSC.hg19.knownGene",
-       "GenomicRanges",
-       "Homo.sapiens",
-       "GenomicFeatures",
-       "GenomicAlignments",
-       "SummarizedExperiment",
-       "MatrixGenerics")
+p_load("tidyverse", "dplyr", "stringr")
 
 ## list files
 md <- list.files(path="./bams/tmp_bams/", pattern="_jxs.tsv", full.names = T)
