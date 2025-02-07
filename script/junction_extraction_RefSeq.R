@@ -10,7 +10,7 @@
 ##      - to detect splice inferred inter- and intra-genic deletions
 ##          
 ## Instructions:  
-##      - perform analysis on the SpliceHunter directory
+##      - perform analysis on the SpliceChaser directory
 ##      - execute bash script 
 ##         
 ################################################################################################################
@@ -88,22 +88,10 @@ files <- list.files(path="./input/tmp/", pattern="_mapped.bed", full.names = T)
 ## load reference
 load("./database/GTEx ref v7 junction database.RData")
 
-# load reference without intron for transcript/gene length
-geneLen <- read.table("./database/RefSeq_ref_without_Intron_v1.bed")
-geneLen <- geneLen %>% dplyr::select(V5, V8) %>%
-  dplyr::rename(t_len = V8) %>% unique()
 
-## gene of interest
-goi <- c( "ASXL1", "ATM", "BCOR", "BCORL1", "BTG1", "CALR",
-          "CBL", "CDKN2A", "CDKN2B", "CEBPA", "CREBBP", "CRLF2", "CSF3R",
-          "CUX1", "DNMT3A", "ETV6", "EED", "EP300", "EZH2", "FAT1", "FAT3",
-          "FBXW7", "FLT3", "GATA2", "IKZF1", "JAK2",
-          "KDM5A", "KDM6A", "KIT", "KMT2D", "MPL", "NCOR1", "NF1",
-          "NOTCH1", "NPM1", "NSD2", "NT5C2", "PAX5", "PHF6", "PPM1D",
-          "PTEN", "PTPN11", "RAD21", "RB1", "RUNX1", "SETBP1", "SETD1B",
-          "SETD2", "SF3B1", "SH2B3", "SMARCA4", "SMC1A", "SMC3", "SRSF2",
-          "STAG2", "STAT5B", "TET2", "TP53", "UBE2A", "WHSC1",
-          "WT1", "ZRSR2", "MTAP", "EP300", "NUP98", "CREBBP", "RAD21")
+## load your gene of interest list
+read.xlsx("./database/Splice_GOI.xlsx") -> vars
+goi <- vars %>% as.list()
 
 for(k in 1:length(files)) {
   
@@ -127,7 +115,7 @@ for(k in 1:length(files)) {
     summarise(counts=sum(V7)) %>%
     dplyr::rename(Symbol=V18) 
   
-  ## SpliceHunter
+  ## SpliceChaser
   posdat.1 <- dat %>%
     mutate(V4.1=V4) %>%
     mutate(V4=ifelse(V4=="+" | V4=="-", V4, V13)) %>%
@@ -189,12 +177,11 @@ for(k in 1:length(files)) {
     group_by(V1, V2, V3, V18) %>%
     slice_max(V16, with_ties = F) %>%
     dplyr::filter((str_detect(abnormality, "\\babnormal\\b")) | GTExFraction < 0.01) %>%
-    left_join(geneDat2, by=c("V18"="Symbol")) %>%
-    mutate(JunctionRatio = V7/counts,
-           JRPM = (V7 * 10^6)/as.integer(counts)) %>%
-    left_join(geneLen, by=c("V14"="V5")) %>%
-    mutate(JPKM=round(JRPM/(t_len/1000), 3)) %>%
-    mutate(delEx=ifelse(withinEx5=="Yes" & withinEx3=="Yes" & nExSkip == "0", paste0("del_", abs(V3-V2+1), "bp"), ## need to include exon-exon or !intron-intron
+       left_join(geneDat2, by=c("V18"="Symbol")) %>%
+       mutate(JunctionRatio = V7/counts,
+           totalJC1M = as.integer(counts)/10^6,
+           JRPM = V7/totalJC1M) %>%
+       mutate(delEx=ifelse(withinEx5=="Yes" & withinEx3=="Yes" & nExSkip == "0", paste0("del_", abs(V3-V2+1), "bp"), ## need to include exon-exon or !intron-intron
                         ifelse(withinEx5=="Yes" & withinEx3=="Yes" & nExSkip >= 1, paste0("del", location5 +1,"-", location3 -1),
                                ifelse(withinEx5=="No" & withinEx3=="Yes" & nExSkip >= 1, paste0("del", location5,"-", location3-1),
                                       ifelse(withinEx5=="Yes" & withinEx3=="No" & nExSkip >= 1, paste0("del", location5+1,"-", location3),
