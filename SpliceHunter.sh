@@ -6,7 +6,7 @@
 ## Author(s): Muneeza Maqsood, Chung Kok
 ##
 ## Purpose: 
-##      - to execute SpliceChaser Pipeline with conversion format implemented
+##      - to execute SpliceHunter Pipeline with conversion format implemented
 ##          
 ## Instructions:  
 ##      - put all SJ.out.tab files in the input directory
