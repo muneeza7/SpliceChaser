@@ -73,8 +73,8 @@ for i in range(len(bname)):
                      17: "first3", 18: "last3", 19: "event5", 20: "event3", 21: "location5", 22: "location3", 
                      23: "strandDirection", 24: "event", 25: "nExSkip", 26: "exon", 27: "withinEx5", 28: "withinEx3", 
                      29: "nGene", 30: "nTranscripts", 31: "distance_from_last5", 32: "distance_from_first3", 
-                     33: "Gene", 34: "GTExFraction", 35: "counts", 36: "JunctionRatio", 37: "JRPM", 38:"t_len", 39: "JPKM", 40: "delEx", 
-                     41: "normalJunction", 42: "backSpliceInfo", 43: "sampleName"})
+                     33: "Gene", 34: "GTExFraction", 35: "counts", 36: "JunctionRatio", 37: "totalJC1M", 38: "JRPM", 39:"delEx", 
+                     40: "normalJunction", 41: "backSpliceInfo", 42: "sampleName"})
 
         final.to_csv(f"{output_dir}/{id1}_Shannon_score.csv", index=False)
 
