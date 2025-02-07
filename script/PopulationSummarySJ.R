@@ -9,7 +9,7 @@
 ##      - to generate a population summary of amalgamated variants from all the samples in a batch
 ##          
 ## Instructions:  
-##      - perform analysis on the SpliceHunter directory
+##      - perform analysis on the SpliceChaser directory
 ##      - execute bash script 
 ##         
 ################################################################################################################
@@ -22,63 +22,48 @@ setwd("./bams/tmp_bams/output/")
 ## load library
 library(pacman)
 
-p_load("tidyverse", 
-       "Biostrings", 
-       "BSgenome.Hsapiens.UCSC.hg19", 
-       "dplyr", 
-       "stringr",
-       "randomForest",
-       "DT", "ggplot2", "data.table")
-
-pacman::p_load(readxl, tidyverse, xlsx, data.table, dplyr, purrr, matrixStats, ggplot2, openxlsx, magrittr, gapminder)
+pacman::p_load(tidyverse, data.table, dplyr, openxlsx)
 options(scipen = 999)
 
 
 ### Functions
 
-#Filtering Hotspot genes from the HGNC_symbol column (33 genes):
-hotspot_gene <- function(x){
-  hotspotGene <-c( "ASXL1", "ATM","BCOR","BCORL1","BTG1","CALR","CDKN2A","CDKN2B","CUX1","DNMT3A","ETV6",
-                   "EZH2","GATA2","IKZF1","JAK2","KDM6A","KIT","KMT2D","PAX5","PHF6","PPM1D","RB1",
-                   "RUNX1","SETD1B","SETD2","SF3B1","SMC3","SRSF2","STAG2","TET2","TP53","UBE2A","WT1", "MTAP", "CDKN2A-AS1","CDKN2B-AS1", 
-                   "EP300", "NUP98", "CREBBP", "RAD21", "RCBTB2")
-  x <-  x %>% dplyr::filter(geneName %in% hotspotGene)
+###Filtering on H_end & H_start
+div_read_fil <- function(x){
+  x <- x %>% dplyr::filter(H_end >= 2.67 & H_start >=2.67)
+  x$JRPM <- round(x$JRPM, 0)
   x
-}
-
-###Filtering on read 
 ###To Create a matrix for comparison between more than 1 dfs ####
 
 new_df <- function(x){
   
   cols_to_retain <- c("chr", "start", "stop", "startAnno", "stopAnno", "geneName", "del_size" , "intron_motif", "unique_count", "event",
                       "H_end", "H_start", "geneStrand", "distance_from_last5", "distance_from_first3", 
-                      "strandDirection", "nExSkip", "exon", "diff_H_start_end", "delEx", "event5", "event3",
-                      "impAnnot5", "impAnnot3", "JPKM")
-  x <- x %>% dplyr::select(all_of(cols_to_retain)) %>%
-    mutate(chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx_impAnnot5_impAnnot3 = paste(chr,start,
+                      "strandDirection", "nExSkip", "exon", "diff_H_start_end", "delEx", "event5", "event3", "JRPM")
+  x <- x %>% dplyr::select(all_of(cols_to_retain)) %>% 
+    mutate(chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx = paste(chr,start,
                                                                                                                                                           stop, startAnno, 
                                                                                                                                                           stopAnno, geneName,
                                                                                                                                                           del_size,intron_motif,
                                                                                                                                                           event, geneStrand,
                                                                                                                                                           strandDirection,nExSkip,
                                                                                                                                                           exon, delEx,
-                                                                                                                                                          impAnnot5, impAnnot3,
                                                                                                                                                           sep = "__"),
            .before = chr)
   x
 }
 
+
 #Defining function to calculate stats (11) ## For comparing multiple datasets
 calc_stat <- function(x){
   x1 <- x %>% remove_rownames() %>% 
-    column_to_rownames(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx_impAnnot5_impAnnot3") %>%
+    column_to_rownames(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx") %>%
     dplyr::select(starts_with("unique_count")) %>%
     type_convert(.) %>%
     transmute(`#PatientsWithVarCall` = rowSums(!is.na(.)))
   
   x2 <- x %>% remove_rownames() %>% 
-    column_to_rownames(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx_impAnnot5_impAnnot3") %>%
+    column_to_rownames(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx") %>%
     dplyr::select(starts_with("unique_count")) %>%
     type_convert(.) %>% rowwise() %>%
     transmute(median_count = round(median(c_across(everything()), na.rm =T), 0),
@@ -92,48 +77,40 @@ calc_stat <- function(x){
               ratio_max_med_count = round((max_count/median_count), 0))
   
   x3 <- x %>% remove_rownames() %>% 
-    column_to_rownames(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx_impAnnot5_impAnnot3") %>%
-    dplyr::select(starts_with("JPKM")) %>%
+    column_to_rownames(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx") %>%
+    dplyr::select(starts_with("JRPM")) %>%
     type_convert(.) %>% rowwise() %>%
     transmute(
-      mean_JPKM = round(mean(c_across(everything()), na.rm =T), 2),
-      SD_JPKM = round(sd(c_across(everything()), na.rm = T), 2),
-      CV_JPKM = round((SD_JPKM/mean_JPKM), 1))
+      mean_JRPM = round(mean(c_across(everything()), na.rm =T), 2),
+      SD_JRPM = round(sd(c_across(everything()), na.rm = T), 2),
+      CV_JRPM = round((SD_JRPM/mean_JRPM), 1))
   
   
   x4 <- x %>% remove_rownames() %>% 
-    column_to_rownames(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx_impAnnot5_impAnnot3") %>%
+    column_to_rownames(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx") %>%
     dplyr::select(starts_with("H_end")) %>%
     type_convert(.) %>% rowwise() %>%
     transmute(max_H_end = max(c_across(everything(starts_with("H_end"))), na.rm = T))
   
   x5 <- x %>% remove_rownames() %>% 
-    column_to_rownames(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx_impAnnot5_impAnnot3") %>%
+    column_to_rownames(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx") %>%
     dplyr::select(starts_with("H_start")) %>%
     type_convert(.) %>% rowwise() %>%
     transmute(max_H_start = max(c_across(everything(starts_with("H_start"))), na.rm = T))
   
   x6 <- x %>% remove_rownames() %>%
-    column_to_rownames(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx_impAnnot5_impAnnot3")
+    column_to_rownames(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx")
   x <- cbind(x6, x5, x4, x3, x2, x1)
 }
 
-del <- function(x){ #Calc deletion size
+#Calc deletion size
+del <- function(x){
   x <- x %>% type_convert(.) %>%
     dplyr::mutate(del_size = abs(start - stop) )
   x
 }
 
-impAnno <- function(x){
-  
-  x <- x %>%
-    dplyr::mutate(impAnnot5 = ifelse(abs(distance_from_last5) == 1, paste(event5, "start", sep = "-"), ifelse(abs(distance_from_last5) == 2, paste(event5, "end", sep = "-"), paste(event5, "middle", sep = "-") )),
-                  impAnnot3 = ifelse(abs(distance_from_first3) == 1, paste(event3, "start", sep = "-"), ifelse(abs(distance_from_first3) == 2, paste(event3, "end", sep = "-"), paste(event3, "middle", sep = "-") ))) 
-  x
-  
-}
-
-#Removing Irrelevant cols (Not used by Sue in decision making)
+#Removing Irrelevant cols 
 rm_cols2 <- function(x){
   cols_to_remove <- c("mean_count", "SD_count", "diff_max_min_count", "SD_JPKM", "mean_JPKM")
   x <- x %>% 
@@ -147,23 +124,20 @@ all_samples <- list.files(pattern = "*_score.csv")
 
 list_all_samples <- sapply(all_samples, read.csv, stringsAsFactors = F, simplify = F)
 
-# filtering for gene of interest (33)
-goi <- sapply(list_all_samples, hotspot_gene, simplify = F)
-
-# intron motif annotation
-list_all_samples2 <- sapply(goi, impAnno, simplify = F)
+# H_score filtering
+list_all_samples1 <- sapply(list_all_samples, div_read_fil, simplify = F)
 
 #Creating a df_list with equal number of columns:
-shorterDF_list <- sapply(list_all_samples2, new_df, simplify = F)
+shorterDF_list <- sapply(list_all_samples1, new_df, simplify = F)
 
 #merging the list of dfs into a single df:
 mergedDF <- bind_rows(shorterDF_list, .id = "id")
 
 #pivot_wider according to the IDs of dataframes
 mergedDF %>% 
-  pivot_wider(id_cols = chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx_impAnnot5_impAnnot3,
+  pivot_wider(id_cols = chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx,
               names_from = id,
-              values_from = c(unique_count,H_end, H_start, diff_H_start_end, JPKM),
+              values_from = c(unique_count,H_end, H_start, diff_H_start_end, JRPM),
               names_vary = "slowest") -> df_wider
 
 #Calculating some stats of the variants data and how many times are these variants been called (# of Patients & runs)
@@ -173,24 +147,23 @@ df_wider %>% calc_stat() %>% arrange(desc(`#PatientsWithVarCall`)) -> final_stat
 final_stat1 <- final_stat %>% rm_cols2()
 # Rearranging cols
 final_stat2 <- final_stat1 %>% dplyr::select(`#PatientsWithVarCall`,  "max_count", "min_count", "median_count", "ratio_max_med_count", 
-                                             "CV_count","CV_JPKM", "total_count", "max_H_start",
+                                             "CV_count","CV_JRPM", "total_count", "max_H_start",
                                              "max_H_end", everything())
-final_stat2 %>% rownames_to_column(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx_impAnnot5_impAnnot3") -> final_stat3
-finale <- final_stat3 %>% separate(chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx_impAnnot5_impAnnot3, 
+final_stat2 %>% rownames_to_column(var = "chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx") -> final_stat3
+finale <- final_stat3 %>% separate(chr_start_stop_startAnno_stopAnno_geneName_delSize_intronMotif_event_geneStrand_strandDirection_nExSkip_exon_delEx, 
                                    c("chr","start", "stop", "startAnno", "stopAnno","geneName", "delSize", "intronMotif", "event", 
-                                     "geneStrand", "strandDirection", "nExSkip", "exon", "delEx",
-                                     "impAnnot5", "impAnnot3"),sep = "__") %>% suppressWarnings(type_convert(.))
+                                     "geneStrand", "strandDirection", "nExSkip", "exon", "delEx"),sep = "__") %>% suppressWarnings(type_convert(.))
 
 fin3 <- finale %>% dplyr::select(-geneStrand, -strandDirection, -event, -total_count, -max_H_start, -max_H_end, -ratio_max_med_count)
 
-#s Set working directory to extract the base directory name
+#Set working directory to extract the base directory name
 setwd("../../../../.")
 
 # Extract the folder name from the working directory
 foldername <- basename(getwd())
 
 # change working directory to where the final output file has to be stored
-setwd("./SpliceHunter/bams/tmp_bams/output/NovelSplices/")
+setwd("./SpliceChaser/bams/tmp_bams/output/NovelSplices/")
 
 # Create a new workbook
 wb <- createWorkbook()
